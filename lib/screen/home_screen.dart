@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,6 +10,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  DateTime selectedDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
@@ -17,11 +24,14 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.pink[100],
       body: SafeArea(
         bottom: false,
-        child: Container(
+        child: SizedBox(
           width: MediaQuery.of(context).size.width,
           child: Column(
             children: [
-              _TopPart(),
+              _TopPart(
+                selectedDate: selectedDate,
+                onPressed: onHeartPressed,
+              ),
               _BottomPart(),
             ],
           ),
@@ -29,52 +39,89 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  void onHeartPressed() {
+    final DateTime now = DateTime.now();
+
+    showCupertinoDialog(
+        context: context,
+        // 다이얼로그 바깥을 누르면 닫을 수 있도록 함
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              color: Colors.white,
+              height: 300,
+              child: CupertinoDatePicker(
+                initialDateTime: selectedDate,
+                mode: CupertinoDatePickerMode.date,
+                maximumDate: DateTime(now.year, now.month, now.day),
+                onDateTimeChanged: (DateTime date) {
+                  setState(() {
+                    selectedDate = date;
+                  });
+                },
+              ),
+            ),
+          );
+        });
+  }
 }
 
 class _TopPart extends StatelessWidget {
-  const _TopPart({Key? key}) : super(key: key);
+  final DateTime selectedDate;
+  final VoidCallback onPressed;
+
+  _TopPart({
+    required this.selectedDate,
+    required this.onPressed,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // of(context): inherited widget
+    // 테마 가져오기
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+    final textTheme = theme.textTheme;
+
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          const Text(
+          Text(
             'U&I',
-            style: TextStyle(
-                color: Colors.white, fontFamily: 'Parisienne', fontSize: 80),
+            style: textTheme.headline1,
           ),
           Column(
             children: [
               Text(
                 '우리 처음 만난 날',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: 'Sunflower', fontSize: 30),
+                style: textTheme.bodyText1,
               ),
-              SizedBox(
+              const SizedBox(
                 height: 5,
               ),
               Text(
-                '2021.12.27',
-                style: TextStyle(
-                    color: Colors.white, fontFamily: 'Sunflower', fontSize: 20),
+                '${selectedDate.year}.${selectedDate.month}.${selectedDate.day}',
+                style: textTheme.bodyText2,
               ),
             ],
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: onPressed,
             iconSize: 60,
-            icon: Icon(Icons.favorite, color: Colors.red),
+            icon: const Icon(Icons.favorite, color: Colors.red),
           ),
           Text(
-            'D-1',
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Sunflower',
-              fontWeight: FontWeight.w700,
-              fontSize: 50,
-            ),
+            'D+${DateTime(
+                  now.year,
+                  now.month,
+                  now.day,
+                ).difference(selectedDate).inDays + 1}',
+            style: textTheme.headline2,
           ),
         ],
       ),
